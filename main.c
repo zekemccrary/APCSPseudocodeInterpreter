@@ -1,9 +1,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "token.h"
+#include "walkablestring.h"
 
 // change to accept a WalkableString later
-TokenList* parse_str(char* str, int len);
+TokenList* parse_str(WalkableString* wstr_ptr);
 
 int main() {
     char* temp_input = "DISPLAY(\"HI\")";
@@ -35,7 +36,7 @@ int main() {
     return 0;
 }
 
-TokenList* parse_str(char* str, int len) {
+TokenList* parse_str(WalkableString* wstr_ptr) {
     // todo!
     return NULL;
 }

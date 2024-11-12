@@ -1,14 +1,16 @@
 #ifndef TOKEN_H_
 #define TOKEN_H_
 
+#include <stddef.h>
+
 typedef enum TokenType TokenType;
 typedef struct Token Token;
 typedef struct TokenList TokenList;
 
-Token* get_token(TokenList* list, unsigned long idx);
-unsigned long push_token(struct TokenList* list_ptr, struct Token* token_ptr);
+Token* get_token(TokenList* list, size_t idx);
+size_t push_token(struct TokenList* list_ptr, struct Token* token_ptr);
 TokenList* new_token_list();
-TokenList* token_list_from(struct Token* token_ptr, unsigned long size);
+TokenList* token_list_from(struct Token* token_ptr, size_t size);
 
 
 enum TokenType {
@@ -55,7 +57,7 @@ struct Token {
     char* chars;
 
     // line number in file for errors
-    unsigned long line_number;
+    size_t line_number;
 };
 
 struct TokenList {
@@ -63,10 +65,10 @@ struct TokenList {
     struct Token* tokens;
 
     // # of elems
-    unsigned long length;
+    size_t length;
 
     // in bytes
-    unsigned long size;
+    size_t size;
 };
 
 #endif
