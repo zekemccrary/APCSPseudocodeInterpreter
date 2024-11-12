@@ -1,66 +1,9 @@
 #include <stddef.h>
 #include <stdlib.h>
+#include <stdio.h>
 #include "token.h"
 
-#define LIST_COEFF 2
-
-enum TokenType {
-    LPARENS,
-    RPARENS,
-    LBRACE,
-    RBRACE,
-    PLUS,
-    MINUS,
-    ASTERISK,
-    FSLASH,
-    EQ,
-    NEQ,
-    GTHAN,
-    LTHAN,
-    GTEQ,
-    LTEQ,
-    COMMA,
-    LBRACKET,
-    RBRACKET,
-    LARROW,
-    MOD,
-    NOT,
-    AND,
-    OR,
-    IF,
-    ELSE,
-    REPEAT,
-    TIMES,
-    UNTIL,
-    FOR,
-    EACH,
-    IN,
-    PROCEDURE,
-    STRING,
-    NUMBER,
-    IDENTIFIER
-};
-
-struct Token {
-    enum TokenType kind;
-
-    // NULL-terminated
-    char * chars;
-
-    // line number in file for errors
-    unsigned long line_number;
-};
-
-struct TokenList {
-    // ptr to first token in list
-    struct Token * tokens;
-
-    // # of elems
-    unsigned long length;
-
-    // in bytes
-    unsigned long size;
-};
+#define GROWTH_COEFF 2
 
 /* 
     Helper functions:
@@ -83,39 +26,41 @@ struct TokenList {
     token_list_from:
         create new token list, function caller guarantees the token_ptr isn't NULL
 */
-struct Token * get_token(struct TokenList * list_ptr, unsigned long idx);
-int push_token(struct TokenList * list_ptr, struct Token * token_ptr);
+struct Token* get_token(struct TokenList* list_ptr, unsigned long idx);
+unsigned long push_token(struct TokenList* list_ptr, struct Token* token_ptr);
 
-struct TokenList * new_token_list();
-struct TokenList * token_list_from(struct Token * token_ptr);
-
-
+struct TokenList* new_token_list();
+struct TokenList* token_list_from(struct Token* token_ptr, unsigned long size);
 
 
-struct Token * get_token(struct TokenList * list_ptr, unsigned long idx) {
+
+
+struct Token * get_token(struct TokenList* list_ptr, unsigned long idx) {
     if (idx >= list_ptr->length) {
+        fprintf(stderr, "Index out of bounds");
         return NULL;
     }
 
-    return &list_ptr->tokens[idx];
+    return list_ptr->tokens + idx;
 }
 
-int push_token(struct TokenList * list_ptr, struct Token * token_ptr) {
+unsigned long push_token(struct TokenList* list_ptr, struct Token* token_ptr) {
     // if we need to allocate more memory
     if ( (list_ptr->length + 1) * sizeof(struct Token) >= list_ptr->size ) {
+        list_ptr->size *= GROWTH_COEFF;
+
         // allocate new memory
-        struct Token * new_buf = (struct Token *)malloc(LIST_COEFF * list_ptr->size);
+        struct Token* new_buf = (struct Token*)malloc(list_ptr->size);
 
         // copy over list to new memory
         for (int i = 0; i < list_ptr->length; i++) {
             // i is guaranteed to be within the bounds of both
             // assuming i didn't make any mistakes
             new_buf[i] = list_ptr->tokens[i];
-            // do NOT forget to free your memory
-            // this is how pointer arithmetic works right?
-            free(list_ptr->tokens + i);
         }
 
+        // do NOT forget to free your memory (attempt 2)
+        free(list_ptr->tokens);
         list_ptr->tokens = new_buf;
     }
 
@@ -128,22 +73,22 @@ int push_token(struct TokenList * list_ptr, struct Token * token_ptr) {
 }
 
 
-struct TokenList * new_token_list() {
-    struct TokenList list;
+struct TokenList* new_token_list() {
+    struct TokenList* list = (struct TokenList*)malloc(sizeof(struct TokenList));
 
-    list.tokens = (struct Token *)malloc(sizeof(struct Token));
-    list.length = 0;
-    list.size = sizeof(struct Token);
+    list->tokens = (struct Token*)malloc(sizeof(struct Token));
+    list->length = 0;
+    list->size = sizeof(struct Token);
 
-    return &list;
+    return list;
 }
 
-struct TokenList * token_list_from(struct Token * token_ptr) {
-    struct TokenList list;
+struct TokenList* token_list_from(struct Token* token_ptr, unsigned long size) {
+    struct TokenList* list = (struct TokenList*)malloc(sizeof(struct TokenList));
 
-    list.tokens = token_ptr;
-    list.length = 1;
-    list.size = sizeof(struct Token);
+    list->tokens = token_ptr;
+    list->length = size / sizeof(struct Token);
+    list->size = size;
 
-    return &list;
+    return list;
 }
