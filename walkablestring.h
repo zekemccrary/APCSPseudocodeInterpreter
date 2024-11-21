@@ -5,15 +5,24 @@
 
 typedef struct WalkableString {
     char* chars;
-    unsigned long length;
-    unsigned long current_idx;
+    size_t length;
+    size_t current_idx;
 } WalkableString;
 
-char take(WalkableString* wstr_ptr);
-char peek(WalkableString* wstr_ptr);
+/*
+    Increments current_idx by 1 and returns it
+    Returns -1 instead if current_idx is now out of bounds of the string
+*/
+int advance(WalkableString* wstr_ptr);
 
-// don't implement for now
-// char* taken(WalkableString* wstr_ptr, size_t n);
-// char* peekn(WalkableString* wstr_ptr, size_t n);
+/*
+    Returns the char at current_idx *unchecked*
+*/
+char get_current_char(WalkableString* wstr_ptr);
+
+/*
+    Returns the address current_idx points to *unchecked*
+*/
+char* get_current_location(WalkableString* wstr_ptr);
 
 #endif

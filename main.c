@@ -1,42 +1,347 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
+
 #include "token.h"
 #include "walkablestring.h"
 
-// change to accept a WalkableString later
-TokenList* parse_str(WalkableString* wstr_ptr);
+
+#define NUM_IDENTIFIERS 13
+
+
+TokenList* parse_wstr(WalkableString* wstr_ptr);
+size_t find_string_len(WalkableString* wstr_ptr);
+size_t find_number_len(WalkableString* wstr_ptr);
+size_t find_identifier_len(WalkableString* wstr_ptr);
+
 
 int main() {
+    // this input will be taken from a file later
     char* temp_input = "DISPLAY(\"HI\")";
+    WalkableString wstr;
+    wstr.chars = temp_input;
+    wstr.length = 13;
+    wstr.current_idx = 0;
 
-    char* token_char = "(";
+    // create heap-allocated structures
+    TokenList* list_ptr = parse_wstr(&wstr);
+    char* list_str = token_list_as_str(list_ptr);
 
-    Token new_token;
-    new_token.kind = LPARENS;
-    new_token.chars = token_char;
-    new_token.line_number = 2;
+    printf("%s\n", list_str);
 
-    TokenList* list_ptr = new_token_list();
-    push_token(list_ptr, &new_token);
-    push_token(list_ptr, &new_token);
-    push_token(list_ptr, &new_token);
-    push_token(list_ptr, &new_token);
-
-    printf("list: %lu elements, %lu bytes\n\n", list_ptr->length, list_ptr->size);
-
-
-    printf("Token 1:\nkind: %d, chars: %s, line_number: %lu\n", (list_ptr->tokens[0]).kind, (list_ptr->tokens[0]).chars, (list_ptr->tokens[0]).line_number);
-    printf("Token 2:\nkind: %d, chars: %s, line_number: %lu\n", (list_ptr->tokens[1]).kind, (list_ptr->tokens[1]).chars, (list_ptr->tokens[1]).line_number);
-    printf("Token 3:\nkind: %d, chars: %s, line_number: %lu\n", (list_ptr->tokens[2]).kind, (list_ptr->tokens[2]).chars, (list_ptr->tokens[2]).line_number);
-    printf("Token 4:\nkind: %d, chars: %s, line_number: %lu\n", (list_ptr->tokens[3]).kind, (list_ptr->tokens[3]).chars, (list_ptr->tokens[3]).line_number);
-
-
-    free(list_ptr);
+    // no memory leaks
+    free(list_str);
+    free_token_list(list_ptr);
 
     return 0;
 }
 
-TokenList* parse_str(WalkableString* wstr_ptr) {
-    // todo!
-    return NULL;
+
+/*
+    This implementation of parsing is just a preliminary example of a lot of the code
+
+    As it improves, it will utilize the WalkableString struct more,
+    and the struct fields will treated more as if they are private
+*/
+
+TokenList* parse_wstr(WalkableString* wstr_ptr) {
+    TokenType identifiers[] =  {MOD, NOT, AND, OR, IF, ELSE, REPEAT, TIMES, UNTIL, FOR, EACH, IN, PROCEDURE};
+    //char** identifier_names = {"MOD", "NOT", "AND", "OR", "IF", "ELSE", "REPEAT", "TIMES", "UNTIL", "FOR", "EACH", "IN", "PROCEDURE"};
+
+    // should I return NULL here or an empty list?
+    if (wstr_ptr->length == 0 || wstr_ptr->chars == NULL) { printf("null list"); return token_list_from(NULL, 0); }
+
+    size_t spaces = 0;
+    // count the number of spaces to estimate how much memory we will need
+    // is this a good idea?
+    for (int i = 0; i < wstr_ptr->length; i++) {
+        spaces += (size_t) (wstr_ptr->chars[i] == ' ');
+    }
+
+    // always good to check
+    if (wstr_ptr->chars == NULL) { printf("null"); return NULL; }
+
+    // remember to free this please
+    TokenList* list_ptr = new_token_list(); // or token_list_with_capacity(spaces);
+    // always good to check
+    if ( list_ptr == NULL) { printf("list malloc failed"); return list_ptr; }
+
+    // token fields
+    TokenType kind;
+    size_t chars_length = 1;
+    size_t line_number = 0;
+
+    char* current_ref = get_current_location(wstr_ptr);
+    char currentc = get_current_char(wstr_ptr);
+    int at_end_of_str = advance(wstr_ptr);
+
+    while (at_end_of_str != -1) {
+        /*
+        if (currentc >= '0' && currentc <= '9') {
+            chars_length = 1 + find_number_len(wstr_ptr);
+        }
+        */
+
+        switch(currentc) {
+            // skip spaces
+            case ' ':
+                break;
+
+            // increment line number
+            case '\n':
+                line_number++;
+                break;
+
+            // numbers
+            case '0':
+            case '1':
+            case '2':
+            case '3':
+            case '4':
+            case '5':
+            case '6':
+            case '7':
+            case '8':
+            case '9':
+                kind = NUMBER;
+                chars_length = 1 + find_number_len(wstr_ptr);
+                break;
+
+            // strings
+            case '\"':
+                kind = STRING;
+                chars_length = 1 + find_string_len(wstr_ptr);
+                break;
+            
+            // single characters
+            case '(':
+                kind = LPARENS;
+                chars_length = 1;
+                break;
+            case ')':
+                kind = RPARENS;
+                chars_length = 1;
+                break;
+            case '{':
+                kind = LBRACE;
+                chars_length = 1;
+                break;
+            case '}':
+                kind = RBRACE;
+                chars_length = 1;
+                break;
+            case '[':
+                kind = LBRACKET;
+                chars_length = 1;
+                break;
+            case ']':
+                kind = RBRACKET;
+                chars_length = 1;
+                break;
+            case ',':
+                kind = COMMA;
+                chars_length = 1;
+                break;
+            case '=':
+                kind = EQ;
+                chars_length = 1;
+                break;
+            case '+':
+                kind = PLUS;
+                chars_length = 1;
+                break;
+            case '-':
+                kind = MINUS;
+                chars_length = 1;
+                break;
+            case '*':
+                kind = ASTERISK;
+                chars_length = 1;
+                break;
+            case '/':
+                kind = FSLASH;
+                chars_length = 1;
+                break;
+            /* 
+            // these will be represented by 8-bit ascii codes generated by a preprocessor
+            // todo!
+            case NEQ:
+                kind = NEQ;
+                chars_length = 1;
+                break;
+            case GTEQ:
+                kind = GTEQ;
+                chars_length = 1;
+                break;
+            case LTEQ:
+                kind = LTEQ;
+                chars_length = 1;
+                break;
+            */
+
+            // possibly double characters
+            case '>':
+                if (get_current_char(wstr_ptr) == '=') {
+                    kind = GTEQ;
+                    chars_length = 2;
+                }
+                else {
+                    kind = GTHAN;
+                    chars_length = 1;
+                }
+                break;
+            case '<':
+                if (get_current_char(wstr_ptr) == '=') {
+                    kind = GTEQ;
+                    chars_length = 2;
+                }
+                else if (get_current_char(wstr_ptr) == '-') {
+                    kind = LARROW;
+                    chars_length = 2;
+                }
+                else {
+                    kind = LTHAN;
+                    chars_length = 1;
+                }
+                break;
+            
+            // everything else is parsed as an identifier
+            default:
+                kind = IDENTIFIER;
+                chars_length = 1 + find_identifier_len(wstr_ptr);
+                break;
+        }
+
+
+        // identifiers require further parsing
+        if (kind == IDENTIFIER) {
+            // if the identifier matches one of these keywords change kind to specify that keyword
+            for (int i = 0; i < NUM_IDENTIFIERS; i++) {
+                char buf[11];
+                (void)write_token_type(kind, buf);
+
+                // use strncmp bc current_ref has no null byte
+                if (strncmp(current_ref, buf, chars_length) == 0) {
+                    kind = identifiers[i];
+                    break;
+                }
+            }
+        }
+
+        // create token
+        Token* tok = (Token*)malloc(sizeof(Token));
+        tok->chars = current_ref;
+        tok->chars_length = chars_length;
+        tok->kind = kind;
+        tok->line_number = line_number;
+
+        // add token to list
+        printf("Adding token! line %zu, first character: %c, last character: %c\n", line_number, *current_ref, current_ref[chars_length-1]);
+        push_token(list_ptr, tok);
+
+        // update variables
+        wstr_ptr->current_idx += chars_length - 1;
+        current_ref = get_current_location(wstr_ptr);
+        currentc = get_current_char(wstr_ptr);
+        at_end_of_str = advance(wstr_ptr);
+    }
+
+    return list_ptr;
+}
+
+
+size_t find_string_len(WalkableString* wstr_ptr) {
+    size_t len = 0;
+    char currentc = get_current_char(wstr_ptr);
+    int at_end_of_str = advance(wstr_ptr);
+
+    while (at_end_of_str != -1) {
+        switch (currentc) {
+            // backslash means next char is escaped so just automatically add it no matter what it is
+            case '\\':
+                // if the file ends before the string does what to do?
+                // i''ll figure it out later
+                if (advance(wstr_ptr) == -1) {
+                    return len;
+                }
+                len++;
+                // advance past the escaped character
+                if (advance(wstr_ptr) == -1) {
+                    return len;
+                }
+                len++;
+                break;
+            case '\"':
+                return len;
+            default:
+                if (advance(wstr_ptr) == -1) {
+                    return len;
+                }
+                len++;
+                break;
+        }
+
+        // update variables
+        currentc = get_current_char(wstr_ptr);
+        at_end_of_str = advance(wstr_ptr);
+    }
+
+    // if the file is over return len
+    return len;
+}
+
+size_t find_number_len(WalkableString* wstr_ptr) {
+    size_t len = 0;
+    char currentc = get_current_char(wstr_ptr);
+    int at_end_of_str = advance(wstr_ptr);
+
+    while (at_end_of_str != -1) {
+        // if it's a number just keep going
+        // if it's a letter just keep going even though its probably a typo
+        if (
+            (currentc >= '0' && currentc <= '9') ||
+            (currentc >= 'A' && currentc <= 'Z') ||
+            (currentc >= 'a' && currentc <= 'z')
+            )
+        {
+            len++;
+            currentc = get_current_char(wstr_ptr);
+            at_end_of_str = advance(wstr_ptr);
+            continue;
+        }
+
+        // otherwise the number literal is over so return
+        return len;
+    }
+
+    // if the file is over
+    return len;
+}
+
+size_t find_identifier_len(WalkableString* wstr_ptr) {
+    size_t len = 0;
+    char currentc = get_current_char(wstr_ptr);
+    int at_end_of_str = advance(wstr_ptr);
+
+    while (at_end_of_str != -1) {
+        // the parsing is actually very similar to parsing a number
+        // the only difference is identifiers can contain underscores
+        if (
+            (currentc >= '0' && currentc <= '9') ||
+            (currentc >= 'A' && currentc <= 'Z') ||
+            (currentc >= 'a' && currentc <= 'z') ||
+             currentc == '_'
+            )
+        {
+            len++;
+            currentc = get_current_char(wstr_ptr);
+            at_end_of_str = advance(wstr_ptr);
+            continue;
+        }
+
+        // if it's not one of those characters the identifier is over so return len
+        return len;
+    }
+
+    return len;
 }
