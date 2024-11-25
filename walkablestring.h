@@ -9,6 +9,13 @@ typedef struct WalkableString {
     size_t current_idx;
 } WalkableString;
 
+
+/*
+    Returns the char after current_idx
+    Returns '\0' instead if there is no char there
+*/
+char peek(WalkableString* wstr_ptr);
+
 /*
     Increments current_idx by 1 and returns it
     Returns -1 instead if current_idx is now out of bounds of the string

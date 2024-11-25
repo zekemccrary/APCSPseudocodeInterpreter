@@ -1,8 +1,8 @@
+#include "token.h"
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-
-#include "token.h"
 
 #define GROWTH_COEFF 2
 
@@ -19,11 +19,11 @@ struct Token * get_token(struct TokenList* list_ptr, size_t idx) {
 
 size_t push_token(struct TokenList* list_ptr, struct Token* token_ptr) {
     // if we need to allocate more memory
-    if ( (list_ptr->count + 1) * sizeof(struct Token*) >= list_ptr->capacity ) {
+    if ( (list_ptr->count + 1) * sizeof(Token) >= list_ptr->capacity ) {
+        size_t temp = list_ptr->capacity;
         list_ptr->capacity *= GROWTH_COEFF;
 
         // allocate new memory
-        printf("allocating new memory! %zu bytes now\n", list_ptr->capacity);
         struct Token* new_buf = (struct Token*)malloc(list_ptr->capacity);
 
         // check if malloc failed
@@ -43,10 +43,11 @@ size_t push_token(struct TokenList* list_ptr, struct Token* token_ptr) {
         list_ptr->tokens = new_buf;
     }
 
+
     // copy the new token into the list
     list_ptr->tokens[list_ptr->count] = *token_ptr;
     // update list count
-    list_ptr->count += 1;
+    list_ptr->count++;
 
     return list_ptr->count;
 }
@@ -78,10 +79,7 @@ struct TokenList* token_list_from(struct Token* token_ptr, size_t size) {
 
 void free_token_list(TokenList* list_ptr) {
     // i hope this is how you're supposed to do this
-    for (int i = 0; i < list_ptr->count; i++) {
-        free(list_ptr->tokens + i);
-    }
-
+    free(list_ptr->tokens);
     free(list_ptr);
 }
 
@@ -91,10 +89,10 @@ size_t write_token_chars(Token* tok_ptr, char* buf) {
     // unchecked because the calling function should be allocating the perfect amount of memory already
     // if (tok_ptr->chars_length > buf_size) { return 0; }
     
-    // strlcpy won't return the right length, probably because of the lack of null byte
+    // use strlcpy because it will append a null byte to buf and returns the size of the written string
+    // however strlcpy won't return the right length, probably because of the lack of null byte, so we return separately
     (void)strlcpy(buf, tok_ptr->chars, tok_ptr->chars_length + 1); // plus one for the null byte
 
-    // use strlcpy because it will append a null byte to buf and returns the size of the written string
     return tok_ptr->chars_length + 1;
 }
 
@@ -162,12 +160,16 @@ size_t token_type_len(TokenType kind) {
             return 3;
         case PROCEDURE:
             return 10;
+        case NEWLINE:
+            return 8;
         case STRING:
             return 7;
         case NUMBER:
             return 7;
         case IDENTIFIER:
             return 11;
+        case UNKNOWN:
+            return 8;
     }
 
     return 0;
@@ -269,6 +271,9 @@ size_t write_token_type(TokenType kind, char* buf) {
         case PROCEDURE:
             strcpy(buf, "PROCEDURE");
             return 10;
+        case NEWLINE:
+            strcpy(buf, "NEWLINE");
+            return 8;
         case STRING:
             strcpy(buf, "STRING");
             return 7;
@@ -278,6 +283,9 @@ size_t write_token_type(TokenType kind, char* buf) {
         case IDENTIFIER:
             strcpy(buf, "IDENTIFIER");
             return 11;
+        case UNKNOWN:
+            strcpy(buf, "UNKNOWN");
+            return 8;
             
     }
 
@@ -289,13 +297,12 @@ char* token_list_as_str(TokenList* list_ptr) {
     // calculate memory needed
     size_t len = 0;
     for (int i = 0; i < list_ptr->count; i++) {
-        len += token_type_len(list_ptr->tokens[i].kind);
+        len += token_type_len(list_ptr->tokens[i].kind) - 1; // minus one because token_type_len includes the null byte
         len += list_ptr->tokens[i].chars_length;
-        len += 4; // '(' and ')' and ',' and ' '
-        printf("len is: %zu\n", len);
+        len += 6; // '(', '\"', '\"', ')', ',', ' '
     }
     // no trailing comma and space
-    // len -= 2
+    // len -= 2;
 
     // allocate memory
     char* buf_start = (char*)malloc(len * sizeof(char)); // sizeof(char) is 1 I think but better safe than sorry
@@ -305,27 +312,25 @@ char* token_list_as_str(TokenList* list_ptr) {
     Token* current_tok;
     size_t str_idx = 0;
 
-    printf("count: %zu\n", list_ptr->count);
-
     for (int i = 0; i < list_ptr->count; i++) {
-        current_tok = list_ptr->tokens + i; // should I write &list_ptr->tokens[i] to be more readable?
+        current_tok = &list_ptr->tokens[i];
 
         str_idx += write_token_type(current_tok->kind, buf_start + str_idx);
-        printf("tokentype: %s\n", buf_start);
-        buf_start[str_idx - 1] = '('; // overwrite the null byte from write_token_type
-
-        size_t temp = str_idx;
+        buf_start[str_idx - 1] = '('; // minus one to overwrite the null byte from write_token_type
+        buf_start[str_idx] = '\"';
+        str_idx++;
 
         str_idx += write_token_chars(current_tok, buf_start + str_idx);
-        printf("token chars: %s\n", buf_start + temp);
-        buf_start[str_idx - 1] = ')'; // overwrite the null byte from write_token_chars
+        buf_start[str_idx - 1] = '\"'; // minus one overwrite the null byte from write_token_chars
+        buf_start[str_idx] = ')';
+        str_idx++;
 
         buf_start[str_idx] = ',';
         buf_start[str_idx + 1] = ' ';
         str_idx += 2;
-
-        printf("i: %d, end: '%c'\n", i, buf_start[str_idx]);
     }
+
+    buf_start[str_idx - 2] = '\0'; // remove trailing comma
 
     return buf_start;
 }

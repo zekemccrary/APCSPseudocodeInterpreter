@@ -94,22 +94,14 @@ enum TokenType {
     PROCEDURE,
 
     // other
+    NEWLINE,
     STRING,
     NUMBER,
-    IDENTIFIER
+    IDENTIFIER,
+    UNKNOWN
 };
 
-/*
-    Sorry
-    fix later
-*/
-struct array_of_11_characters_wrapper {
-    char array[11];
-};
 
-/*
-
-*/
 struct Token {
     enum TokenType kind;
 
