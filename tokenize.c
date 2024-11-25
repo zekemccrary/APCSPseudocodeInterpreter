@@ -56,14 +56,14 @@ TokenList* parse_to_tokens(char* str) {
     // loop variables
     char* current_ref;
     char currentc;
-    int at_end_of_str;
+    size_t at_end_of_str = wstr.length; // if length is 0 the loop won't run otherwise it will
 
-    while (at_end_of_str != -1) {
+    while (at_end_of_str != 0) {
         // instantiate / update variables
         current_ref = get_current_location(&wstr);
         currentc = get_current_char(&wstr);
         at_end_of_str = advance(&wstr);
-        if (at_end_of_str == -1) { break; } // have to add this check because I moved variable updating to the top of the loop
+        if (at_end_of_str == 0) { break; } // have to add this check because I moved variable updating to the top of the loop
 
         switch(currentc) {
             // skip spaces
@@ -182,13 +182,13 @@ TokenList* parse_to_tokens(char* str) {
                     kind = GTEQ;
                     chars_length = 2;
                     // skip the '=' because it is part of the token
-                    advance(&wstr);
+                    (void)advance(&wstr);
                 }
                 else if (get_current_char(&wstr) == '-') {
                     kind = LARROW;
                     chars_length = 2;
                     // skip the '-' because it is part of the token
-                    advance(&wstr);
+                    (void)advance(&wstr);
                 }
                 else {
                     kind = LTHAN;
@@ -250,9 +250,9 @@ TokenList* parse_to_tokens(char* str) {
 size_t find_string_len(WalkableString* wstr_ptr) {
     size_t len = 1;
     char currentc = get_current_char(wstr_ptr);
-    int at_end_of_str = advance(wstr_ptr);
+    size_t at_end_of_str = advance(wstr_ptr);
 
-    while (at_end_of_str != -1) {
+    while (at_end_of_str != 0) {
         switch (currentc) {
             // backslash means next char is escaped so just automatically add it no matter what it is
             case '\\':
@@ -260,7 +260,7 @@ size_t find_string_len(WalkableString* wstr_ptr) {
                 // i''ll figure it out later
                 
                 // advance past the escaped character
-                if (advance(wstr_ptr) == -1) {
+                if (advance(wstr_ptr) == 0) {
                     return len;
                 }
                 len++;

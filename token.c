@@ -5,17 +5,14 @@
 #include <string.h>
 
 #define GROWTH_COEFF 2
+#define ENUM_COUNT 36
+#define MAX_TOKENTYPE_LENGTH 11
+
+const int TOKENTYPE_LENGTHS[ENUM_COUNT] = {8, 8, 7, 7, 9, 9, 6, 3, 4, 5, 5, 5, 6, 9, 7, 6, 6, 7, 4, 4, 4, 3, 3, 5, 7, 6, 6, 4, 5, 3, 10, 8, 7, 7, 11, 8};
+const char* TOKENTYPE_NAMES[ENUM_COUNT] = {"LPARENS", "RPARENS", "LBRACE", "RBRACE", "LBRACKET", "RBRACKET", "COMMA", "EQ", "NEQ", "GTEQ", "LTEQ", "PLUS", "MINUS", "ASTERISK", "FSLASH", "GTHAN", "LTHAN", "LARROW", "MOD", "NOT", "AND", "OR", "IF", "ELSE", "REPEAT", "TIMES", "UNTIL", "FOR", "EACH", "IN", "PROCEDURE", "NEWLINE", "STRING", "NUMBER", "IDENTIFIER", "UNKNOWN"};
 
 
 
-struct Token * get_token(struct TokenList* list_ptr, size_t idx) {
-    if (idx >= list_ptr->count) {
-        fprintf(stderr, "Index out of bounds");
-        return NULL;
-    }
-
-    return list_ptr->tokens + idx;
-}
 
 size_t push_token(struct TokenList* list_ptr, struct Token* token_ptr) {
     // if we need to allocate more memory
@@ -53,10 +50,6 @@ size_t push_token(struct TokenList* list_ptr, struct Token* token_ptr) {
 }
 
 
-struct TokenList* new_token_list() {
-    return token_list_with_capacity(1);
-}
-
 struct TokenList* token_list_with_capacity(size_t tokens) {
     struct TokenList* list = (struct TokenList*)malloc(sizeof(struct TokenList));
 
@@ -89,207 +82,20 @@ size_t write_token_chars(Token* tok_ptr, char* buf) {
     // unchecked because the calling function should be allocating the perfect amount of memory already
     // if (tok_ptr->chars_length > buf_size) { return 0; }
     
-    // use strlcpy because it will append a null byte to buf and returns the size of the written string
-    // however strlcpy won't return the right length, probably because of the lack of null byte, so we return separately
-    (void)strlcpy(buf, tok_ptr->chars, tok_ptr->chars_length + 1); // plus one for the null byte
+    // use strncpy because strlcpy is not available everywhere
+    // return separately because I don't trust strncpy to get the number of chars right (strlcpy didn't for some reason)
+    (void)strncpy(buf, tok_ptr->chars, tok_ptr->chars_length + 1); // plus one for the null byte
 
     return tok_ptr->chars_length + 1;
 }
 
 size_t token_type_len(TokenType kind) {
-    switch (kind) {
-        case LPARENS:
-            return 8;
-        case RPARENS:
-            return 8;
-        case LBRACE:
-            return 7;
-        case RBRACE:
-            return 7;
-        case LBRACKET:
-            return 9;
-        case RBRACKET:
-            return 9;
-        case COMMA:
-            return 6;
-        case EQ:
-            return 3;
-        case NEQ:
-            return 4;
-        case GTEQ:
-            return 5;
-        case LTEQ:
-            return 5;
-        case PLUS:
-            return 5;
-        case MINUS:
-            return 6;
-        case ASTERISK:
-            return 9;
-        case FSLASH:
-            return 7;
-        case GTHAN:
-            return 6;
-        case LTHAN:
-            return 6;
-        case LARROW:
-            return 7;
-        case MOD:
-            return 4;
-        case NOT:
-            return 4;
-        case AND:
-            return 4;
-        case OR:
-            return 3;
-        case IF:
-            return 3;
-        case ELSE:
-            return 5;
-        case REPEAT:
-            return 7;
-        case TIMES:
-            return 6;
-        case UNTIL:
-            return 6;
-        case FOR:
-            return 4;
-        case EACH:
-            return 5;
-        case IN:
-            return 3;
-        case PROCEDURE:
-            return 10;
-        case NEWLINE:
-            return 8;
-        case STRING:
-            return 7;
-        case NUMBER:
-            return 7;
-        case IDENTIFIER:
-            return 11;
-        case UNKNOWN:
-            return 8;
-    }
-
-    return 0;
+    return TOKENTYPE_LENGTHS[kind];
 }
 
 size_t write_token_type(TokenType kind, char* buf) {
-    switch (kind) {
-        // this is where you would use strcpy isnt it
-        case LPARENS:
-            strcpy(buf, "LPARENS");
-            return 8;
-        case RPARENS:
-            strcpy(buf, "RPARENS");
-            return 8;
-        case LBRACE:
-            strcpy(buf, "LBRACE");
-            return 7;
-        case RBRACE:
-            strcpy(buf, "RBRACE");
-            return 7;
-        case LBRACKET:
-            strcpy(buf, "LBRACKET");
-            return 9;
-        case RBRACKET:
-            strcpy(buf, "RBRACKET");
-            return 9;
-        case COMMA:
-            strcpy(buf, "COMMA");
-            return 6;
-        case EQ:
-            strcpy(buf, "EQ");
-            return 3;
-        case NEQ:
-            strcpy(buf, "NEQ");
-            return 4;
-        case GTEQ:
-            strcpy(buf, "GTEQ");
-            return 5;
-        case LTEQ:
-            strcpy(buf, "LTEQ");
-            return 5;
-        case PLUS:
-            strcpy(buf, "PLUS");
-            return 5;
-        case MINUS:
-            strcpy(buf, "MINUS");
-            return 6;
-        case ASTERISK:
-            strcpy(buf, "ASTERISK");
-            return 9;
-        case FSLASH:
-            strcpy(buf, "FSLASH");
-            return 7;
-        case GTHAN:
-            strcpy(buf, "GTHAN");
-            return 6;
-        case LTHAN:
-            strcpy(buf, "LTHAN");
-            return 6;
-        case LARROW:
-            strcpy(buf, "LARROW");
-            return 7;
-        case MOD:
-            strcpy(buf, "MOD");
-            return 4;
-        case NOT:
-            strcpy(buf, "NOT");
-            return 4;
-        case AND:
-            strcpy(buf, "AND");
-            return 4;
-        case OR:
-            strcpy(buf, "OR");
-            return 3;
-        case IF:
-            strcpy(buf, "IF");
-            return 3;
-        case ELSE:
-            strcpy(buf, "ELSE");
-            return 5;
-        case REPEAT:
-            strcpy(buf, "REPEAT");
-            return 7;
-        case TIMES:
-            strcpy(buf, "TIMES");
-            return 6;
-        case UNTIL:
-            strcpy(buf, "UNTIL");
-            return 6;
-        case FOR:
-            strcpy(buf, "FOR");
-            return 4;
-        case EACH:
-            strcpy(buf, "EACH");
-            return 5;
-        case IN:
-            strcpy(buf, "IN");
-            return 3;
-        case PROCEDURE:
-            strcpy(buf, "PROCEDURE");
-            return 10;
-        case NEWLINE:
-            strcpy(buf, "NEWLINE");
-            return 8;
-        case STRING:
-            strcpy(buf, "STRING");
-            return 7;
-        case NUMBER:
-            strcpy(buf, "NUMBER");
-            return 7;
-        case IDENTIFIER:
-            strcpy(buf, "IDENTIFIER");
-            return 11;
-        case UNKNOWN:
-            strcpy(buf, "UNKNOWN");
-            return 8;
-            
-    }
-
-    return 0;
+    strcpy(buf, TOKENTYPE_NAMES[kind]);
+    return TOKENTYPE_LENGTHS[kind];
 }
 
 

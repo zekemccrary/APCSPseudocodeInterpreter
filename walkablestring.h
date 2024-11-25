@@ -18,9 +18,9 @@ char peek(WalkableString* wstr_ptr);
 
 /*
     Increments current_idx by 1 and returns it
-    Returns -1 instead if current_idx is now out of bounds of the string
+    Returns 0 instead if current_idx is now out of bounds of the string
 */
-int advance(WalkableString* wstr_ptr);
+size_t advance(WalkableString* wstr_ptr);
 
 /*
     Returns the char at current_idx *unchecked*

@@ -1,9 +1,6 @@
 #include "walkablestring.h"
 
 #include <stddef.h>
-#include <stdio.h>
-
-
 
 char peek(WalkableString* wstr_ptr) {
     if (wstr_ptr->current_idx >= wstr_ptr->length) {
@@ -13,9 +10,9 @@ char peek(WalkableString* wstr_ptr) {
     return wstr_ptr->chars[wstr_ptr->current_idx + 1];
 }
 
-int advance(WalkableString* wstr_ptr) {
+size_t advance(WalkableString* wstr_ptr) {
     if (wstr_ptr->current_idx >= wstr_ptr->length) {
-        return -1;
+        return 0;
     }
 
     wstr_ptr->current_idx += 1;
