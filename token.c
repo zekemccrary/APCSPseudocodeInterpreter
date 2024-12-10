@@ -5,11 +5,10 @@
 #include <string.h>
 
 #define GROWTH_COEFF 2
-#define ENUM_COUNT 36
 #define MAX_TOKENTYPE_LENGTH 11
 
-const int TOKENTYPE_LENGTHS[ENUM_COUNT] = {8, 8, 7, 7, 9, 9, 6, 3, 4, 5, 5, 5, 6, 9, 7, 6, 6, 7, 4, 4, 4, 3, 3, 5, 7, 6, 6, 4, 5, 3, 10, 8, 7, 7, 11, 8};
-const char* TOKENTYPE_NAMES[ENUM_COUNT] = {"LPARENS", "RPARENS", "LBRACE", "RBRACE", "LBRACKET", "RBRACKET", "COMMA", "EQ", "NEQ", "GTEQ", "LTEQ", "PLUS", "MINUS", "ASTERISK", "FSLASH", "GTHAN", "LTHAN", "LARROW", "MOD", "NOT", "AND", "OR", "IF", "ELSE", "REPEAT", "TIMES", "UNTIL", "FOR", "EACH", "IN", "PROCEDURE", "NEWLINE", "STRING", "NUMBER", "IDENTIFIER", "UNKNOWN"};
+const int TOKENTYPE_LENGTHS[ENUM_COUNT] = {8, 8, 7, 7, 9, 9, 6, 3, 4, 5, 5, 5, 6, 9, 7, 6, 6, 7, 4, 4, 4, 3, 3, 5, 7, 6, 6, 4, 5, 3, 10, 5, 6, 8, 7, 7, 11, 8};
+const char* TOKENTYPE_NAMES[ENUM_COUNT] = {"LPARENS", "RPARENS", "LBRACE", "RBRACE", "LBRACKET", "RBRACKET", "COMMA", "EQ", "NEQ", "GTEQ", "LTEQ", "PLUS", "MINUS", "ASTERISK", "FSLASH", "GTHAN", "LTHAN", "LARROW", "MOD", "NOT", "AND", "OR", "IF", "ELSE", "REPEAT", "TIMES", "UNTIL", "FOR", "EACH", "IN", "PROCEDURE", "TRUE", "FALSE", "NEWLINE", "STRING", "NUMBER", "IDENTIFIER", "UNKNOWN"};
 
 
 
@@ -106,6 +105,11 @@ char* token_list_as_str(TokenList* list_ptr) {
         len += token_type_len(list_ptr->tokens[i].kind) - 1; // minus one because token_type_len includes the null byte
         len += list_ptr->tokens[i].chars_length;
         len += 6; // '(', '\"', '\"', ')', ',', ' '
+
+        // displaying single-character '\n' as two-character string "\\n"
+        if (list_ptr->tokens[i].kind == NEWLINE) {
+            len++;
+        }
     }
     // no trailing comma and space
     // len -= 2;
@@ -120,23 +124,33 @@ char* token_list_as_str(TokenList* list_ptr) {
 
     for (int i = 0; i < list_ptr->count; i++) {
         current_tok = &list_ptr->tokens[i];
+        TokenType tkind = current_tok->kind;
 
-        str_idx += write_token_type(current_tok->kind, buf_start + str_idx);
+        // TOKEN TYPE
+        str_idx += write_token_type(tkind, buf_start + str_idx);
         buf_start[str_idx - 1] = '('; // minus one to overwrite the null byte from write_token_type
         buf_start[str_idx] = '\"';
         str_idx++;
 
-        str_idx += write_token_chars(current_tok, buf_start + str_idx);
+        // TOKEN CHARS
+        if (tkind == NEWLINE) {
+            buf_start[str_idx] = '\\';
+            buf_start[str_idx + 1] = 'n';
+            str_idx += 3; // three because write_token_chars adds a null byte so this has to do that too
+        } else {
+            str_idx += write_token_chars(current_tok, buf_start + str_idx);
+        }
+
+        // CONNECTING TOKENS
         buf_start[str_idx - 1] = '\"'; // minus one overwrite the null byte from write_token_chars
         buf_start[str_idx] = ')';
-        str_idx++;
+        buf_start[str_idx + 1] = ',';
+        buf_start[str_idx + 2] = tkind == NEWLINE ? '\n' : ' ';
 
-        buf_start[str_idx] = ',';
-        buf_start[str_idx + 1] = ' ';
-        str_idx += 2;
+        str_idx += 3;
     }
 
-    buf_start[str_idx - 2] = '\0'; // remove trailing comma
+    buf_start[str_idx - 2] = '\0'; // remove trailing comma space
 
     return buf_start;
 }

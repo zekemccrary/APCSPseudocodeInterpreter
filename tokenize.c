@@ -7,8 +7,6 @@
 #include "token.h"
 #include "walkablestring.h"
 
-#define NUM_IDENTIFIERS 13
-
 
 
 TokenList* parse_to_tokens(char* str) {

@@ -3,6 +3,9 @@
 
 #include <stddef.h>
 
+
+#define NUM_IDENTIFIERS 15
+
 typedef enum TokenType TokenType;
 typedef struct Token Token;
 typedef struct TokenList TokenList;
@@ -92,13 +95,18 @@ enum TokenType {
     EACH,
     IN,
     PROCEDURE,
+    TRUE,
+    FALSE,
 
     // other
     NEWLINE,
     STRING,
     NUMBER,
     IDENTIFIER,
-    UNKNOWN
+    UNKNOWN,
+
+    // marker
+    ENUM_COUNT,
 };
 
 
