@@ -52,9 +52,9 @@ size_t push_token(struct TokenList* list_ptr, struct Token* token_ptr) {
 struct TokenList* token_list_with_capacity(size_t tokens) {
     struct TokenList* list = (struct TokenList*)malloc(sizeof(struct TokenList));
 
-    list->tokens = (struct Token*)malloc(tokens * sizeof(struct Token*));
+    list->tokens = (struct Token*)malloc(tokens * sizeof(struct Token));
     list->count = 0;
-    list->capacity = tokens * sizeof(struct Token*);
+    list->capacity = tokens * sizeof(struct Token);
 
     return list;
 }
@@ -63,7 +63,7 @@ struct TokenList* token_list_from(struct Token* token_ptr, size_t size) {
     struct TokenList* list = (struct TokenList*)malloc(sizeof(struct TokenList));
 
     list->tokens = token_ptr;
-    list->count = size / sizeof(struct Token*);
+    list->count = size / sizeof(struct Token);
     list->capacity = size;
 
     return list;

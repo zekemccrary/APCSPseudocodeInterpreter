@@ -1,8 +1,8 @@
-#include <stdio.h>
-#include <stdlib.h>
-
 #include "tokenize.h"
 #include "futils.h"
+
+#include <stdio.h>
+#include <stdlib.h>
 
 // this will be changed to command-line argument later
 #define FILENAME "main.csp"
