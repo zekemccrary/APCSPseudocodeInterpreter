@@ -1,5 +1,5 @@
-#ifndef FUTILS_H
-#define FUTILS_H
+#ifndef UTILS_H
+#define UTILS_H
 
 /*
     Source: https://stackoverflow.com/questions/174531/how-to-read-the-content-of-a-file-to-a-string-in-c
