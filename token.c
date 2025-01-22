@@ -16,26 +16,18 @@ const char* TOKENTYPE_NAMES[ENUM_COUNT] = {"LPARENS", "RPARENS", "LBRACE", "RBRA
 size_t push_token(struct TokenList* list_ptr, struct Token* token_ptr) {
     // if we need to allocate more memory
     if ( (list_ptr->count + 1) * sizeof(Token) >= list_ptr->capacity ) {
-        size_t temp = list_ptr->capacity;
+        // grow size of TokenList memory
         list_ptr->capacity *= GROWTH_COEFF;
 
-        // allocate new memory
-        struct Token* new_buf = (struct Token*)malloc(list_ptr->capacity);
+        // allocate new memory to match new capacity
+        struct Token* new_buf = (struct Token*)realloc(list_ptr->tokens, list_ptr->capacity);
 
         // check if malloc failed
         if (new_buf == NULL) {
             return 0;
         }
 
-        // copy over list to new memory
-        for (int i = 0; i < list_ptr->count; i++) {
-            // i is guaranteed to be within the bounds of both
-            // assuming i didn't make any mistakes
-            new_buf[i] = list_ptr->tokens[i];
-        }
-
-        // do NOT forget to free your memory (attempt 2)
-        free(list_ptr->tokens);
+        // update the token ptr to point to non-freed memory
         list_ptr->tokens = new_buf;
     }
 
