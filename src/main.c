@@ -5,7 +5,7 @@
 #include <stdlib.h>
 
 // this will be changed to command-line argument later
-#define FILENAME "main.csp"
+#define FILENAME "../main.csp"
 
 int main() {
     // this input will be taken from a file later
@@ -16,6 +16,9 @@ int main() {
     char* list_str = token_list_to_str(list_ptr);
 
     printf("%s\n", list_str);
+
+    // put a bunch of variables in a hashtable and then print it
+    test_hashtables();
 
     // no memory leaks
     free(list_str);
