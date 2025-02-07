@@ -1,5 +1,4 @@
 #include "tokenize.h"
-#include "token.h"
 
 #include <stdio.h>
 #include <stdlib.h>

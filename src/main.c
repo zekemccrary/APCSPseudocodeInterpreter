@@ -1,5 +1,7 @@
 #include "tokenize.h"
-#include "utils/utils.h"
+
+#include "utils/futils.c"
+#include "utils/hashtable.c"
 
 #include <stdio.h>
 #include <stdlib.h>
